@@ -4,8 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-matplotlib = "*"
 numpy = "*"
+scipy = "*"
+matplotlib = "*"
+pyqtgraph = "*"
+pyqt6 = "*"
+pyopengl = "*"
+pynput = "*"
 
 [dev-packages]
 
