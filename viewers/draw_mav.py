@@ -12,7 +12,7 @@ from tools.rotations import euler_to_rotation
 from tools.drawing import rotate_points, translate_points, points_to_mesh
 
 
-class DrawMav:
+class DrawMAV:
     def __init__(self, state, window, scale=10):
         """
         Draw the MAV.
@@ -86,33 +86,38 @@ class DrawMav:
         # points are in XYZ coordinates
         #   define the points on the MAV according to Appendix C.3
         points = self.unit_length * np.array([
-            [1, 1, 0],  # point 1 [0]
-            [1, -1, 0],  # point 2 [1]
-            [-1, -1, 0],  # point 3 [2]
-            [-1, 1, 0],  # point 4 [3]
-            [1, 1, -2],  # point 5 [4]
-            [1, -1, -2],  # point 6 [5]
-            [-1, -1, -2],  # point 7 [6]
-            [-1, 1, -2],  # point 8 [7]
-            [1.5, 1.5, 0],  # point 9 [8]
-            [1.5, -1.5, 0],  # point 10 [9]
-            [-1.5, -1.5, 0],  # point 11 [10]
-            [-1.5, 1.5, 0]  # point 12 [11]
+            [2.4,0,0.4], #0: p1
+            [1.432,0.648,-0.516], #1: p2
+            [1.432,-0.648,-0.516], #2: p3
+            [1.432,-0.648,0.516], #3: p4
+            [1.432,0.648,0.516], #4: p5
+            [-4.416,0,0], #5: p6
+            [0,2.904,0], #6: p7
+            [-1.776,2.904,0], #7: p8
+            [-1.776,-2.904,0], #8: p9
+            [0,-2.904,0], #9 p10
+            [-3.312,1.488,0], #10 p11
+            [-4.416,1.488,0], #11 p12
+            [-4.416,-1.488,0], #12 p13
+            [-3.312,-1.488,0], #13 p14
+            [-3.312,0,0], #14 p15
+            [-4.416,0,-1.344] #15 p16
             ]).T
         # point index that defines the mesh
         index = np.array([
-            [0, 1, 5],  # front 1
-            [0, 5, 4],  # front 2
-            [3, 2, 6],  # back 1
-            [3, 6, 7],  # back 2
-            [0, 4, 7],  # right 1
-            [0, 7, 3],  # right 2
-            [1, 5, 6],  # left 1
-            [1, 6, 2],  # left 2
-            [4, 5, 6],  # top 1
-            [4, 6, 7],  # top 2
-            [8, 9, 10],  # bottom 1
-            [8, 10, 11],  # bottom 2  
+            [0,1,2], #0: Top Front Face
+            [0,2,3], #1: Left Front Face
+            [0,1,4], #2: Right Front Face
+            [0,4,3], #3: Bottom Front Face
+            [1,2,5], #4: Top Side Body
+            [3,4,5], #5: Bottom Side Body
+            [2,3,5], #6: Left Side Body
+            [1,4,5], #7: Right Side Body
+            [5,14,15], #8: Stabilizer
+            [6,7,9], #9: Wing 1
+            [7, 9, 8], #10: Wing 2
+            [10, 13, 12], #11: Rudder 1
+            [11, 10, 12] #12: Rudder 2
             ])
         #   define the colors for each face of triangular mesh
         red = np.array([1., 0., 0., 1])
@@ -130,7 +135,8 @@ class DrawMav:
         meshColors[7] = blue  # left 2
         meshColors[8] = red  # top 1
         meshColors[9] = red  # top 2
-        meshColors[10] = green  # bottom 1
+        meshColors[10] = red  # bottom 1
         meshColors[11] = green  # bottom 2
+        meshColors[12] = green  # bottom 2
         return points, index, meshColors
 
