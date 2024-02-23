@@ -4,6 +4,13 @@ various tools to be used in mavPySim
 import numpy as np
 import scipy.linalg as linalg
 
+
+
+
+
+
+
+
 def quaternion_to_euler(quaternion):
     """
     converts a quaternion attitude to an euler angle attitude

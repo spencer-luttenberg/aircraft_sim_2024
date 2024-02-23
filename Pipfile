@@ -13,7 +13,8 @@ pyopengl = "*"
 pynput = "*"
 opencv-python = "*"
 Pillow = "*"
-
+keyboard = "*"
+pygame = "*"
 
 [dev-packages]
 
