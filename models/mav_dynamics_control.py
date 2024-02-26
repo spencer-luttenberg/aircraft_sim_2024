@@ -163,23 +163,25 @@ class MavDynamics(MavDynamicsForces):
         # compute thrust and torque due to propeller
         ##### TODO #####
         # map delta_t throttle command(0 to 1) into motor input voltage
-        v_in = MAV.V_max * delta_t
+        # v_in = MAV.V_max * delta_t
         
-        a = MAV.C_Q0 * MAV.rho * np.power(MAV.D_prop, 5) / ((2*np.pi)**2)
-        b = (MAV.C_Q1 * MAV.rho * np.power(MAV.D_prop, 4) / (2*np.pi)) * self._Va + MAV.KQ**2/MAV.R_motor
-        c = MAV.C_Q2 * MAV.rho * np.power(MAV.D_prop, 3) * self._Va**2 - (MAV.KQ/MAV.R_motor) * v_in + MAV.KQ*MAV.i0
+        # a = MAV.C_Q0 * MAV.rho * np.power(MAV.D_prop, 5) / ((2*np.pi)**2)
+        # b = (MAV.C_Q1 * MAV.rho * np.power(MAV.D_prop, 4) / (2*np.pi)) * self._Va + MAV.KQ**2/MAV.R_motor
+        # c = MAV.C_Q2 * MAV.rho * np.power(MAV.D_prop, 3) * self._Va**2 - (MAV.KQ/MAV.R_motor) * v_in + MAV.KQ*MAV.i0
 
-        omega_p = (-b + np.sqrt(b**2-4*a*c))/(2*a)
-        J_op = 2*np.pi * self._Va / (omega_p * MAV.D_prop)
-        C_T = MAV.C_T2 * J_op**2 + MAV.C_T1 * J_op + MAV.C_T0
-        C_Q = MAV.C_Q2 * J_op**2 + MAV.C_Q1 * J_op + MAV.C_Q0
+        # omega_p = (-b + np.sqrt(b**2-4*a*c))/(2*a)
+        # J_op = 2*np.pi * self._Va / (omega_p * MAV.D_prop)
+        # C_T = MAV.C_T2 * J_op**2 + MAV.C_T1 * J_op + MAV.C_T0
+        # C_Q = MAV.C_Q2 * J_op**2 + MAV.C_Q1 * J_op + MAV.C_Q0
         
-        n = omega_p / (2 *np.pi)
-        # Angular speed of propeller (omega_p = ?)
+        # n = omega_p / (2 *np.pi)
+        # # Angular speed of propeller (omega_p = ?)
 
-        # thrust and torque due to propeller
-        thrust_prop = MAV.rho * n**2 * np.power(MAV.D_prop, 4) * C_T
-        torque_prop = -MAV.rho * n**2 * np.power(MAV.D_prop, 5) * C_Q
+        # # thrust and torque due to propeller
+        # thrust_prop = MAV.rho * n**2 * np.power(MAV.D_prop, 4) * C_T
+        # torque_prop = -MAV.rho * n**2 * np.power(MAV.D_prop, 5) * C_Q
+        thrust_prop = 0.5*MAV.rho*MAV.S_prop*((MAV.K_motor*delta_t)**2 - Va**2)
+        torque_prop = 0
 
         return thrust_prop, torque_prop
 

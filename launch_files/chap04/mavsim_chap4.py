@@ -82,8 +82,8 @@ end_time = 60
 print("Press 'Esc' to exit...")
 
 default_delta_elevator = -0.1248
-default_delta_aileron = 0.001836
-default_delta_rudder = -0.0003026
+default_delta_aileron = 0
+default_delta_rudder = 0
 default_delta_throrttle = 0.6768
 
 
