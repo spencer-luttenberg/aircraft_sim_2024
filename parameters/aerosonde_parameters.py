@@ -14,7 +14,7 @@ alpha0_cool = np.deg2rad(3)
 u0 = np.sqrt(Va0**2 / (1+np.tan(alpha0_cool**2)))
 w_u = np.tan(alpha0_cool)
 w0 = u0*w_u
-Va1 = np.linalg.norm(np.array[u0,w0])
+Va1 = np.linalg.norm(np.array([u0,w0]))
 
 
 v0 = 0.  # initial velocity along body y-axis
