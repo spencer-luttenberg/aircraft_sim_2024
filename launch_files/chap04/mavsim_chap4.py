@@ -20,8 +20,9 @@ from models.wind_simulation import WindSimulation
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
 from message_types.msg_delta import MsgDelta
+from mystuff.trim import compute_trim
 import keyboard
-import pygame
+
 
 
 #quitter = QuitListener()
@@ -29,19 +30,7 @@ import pygame
 #pygame stuff
 
 
-pygame.init()
 
-X = 1000
-Y = 1000
-
-font = pygame.font.SysFont("comicsansms", 22)
-display_surface = pygame.display.set_mode((X, Y))
-
-white = (255, 255, 255)
-green = (0, 255, 0)
-blue = (0, 0, 128)
-
-pygame.display.set_caption('Display my controls!')
 
 
 
@@ -73,6 +62,11 @@ wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 delta = MsgDelta()
 
+
+
+
+
+
 # initialize the simulation time
 sim_time = SIM.start_time
 plot_time = sim_time
@@ -81,11 +75,24 @@ end_time = 60
 # main simulation loop
 print("Press 'Esc' to exit...")
 
-default_delta_elevator = -0.1248
-default_delta_aileron = 0
-default_delta_rudder = 0
-default_delta_throrttle = 0.6768
 
+Va0 = 35.
+alpha0 = 20.
+beta0 = 0.
+
+delta.elevator = -0.1248
+delta.aileron = 0.0
+delta.rudder=-0.0
+delta.throttle = 0.6768
+
+
+
+mav.initialize_velocity(Va0, alpha0, beta0)
+
+alpha, elevator, throttle = compute_trim(mav, delta)
+mav.initialize_velocity(Va0, alpha, beta0)
+delta.elevator = elevator
+delta.throttle = throttle
 
 
 
@@ -95,82 +102,26 @@ while sim_time < end_time:
 
 
 
-
-
     # ------- set control surfaces -------------
-    if keyboard.is_pressed('u'):
-        default_delta_elevator += 0.005
-    elif keyboard.is_pressed('j'):
-        default_delta_elevator -= 0.005        
-    if keyboard.is_pressed('h'):
-        default_delta_aileron -= 0.005
-    elif keyboard.is_pressed('k'):
-        default_delta_aileron += 0.005
-    if keyboard.is_pressed('p'):
-        default_delta_rudder -= 0.005
-    elif keyboard.is_pressed('o'):
-        default_delta_rudder += 0.005
-    # if keyboard.is_pressed('r'):
-    #         delta.throttle += 0.01
-    # elif keyboard.is_pressed('f'):
-    #         delta.throttle -= 0.01
-    # if keyboard.is_pressed('esc'):
-    #     break
-
     if keyboard.is_pressed('w'):
-        delta.elevator = 0.2
+        delta.elevator += 0.005
     elif keyboard.is_pressed('s'):
-        delta.elevator = -0.2
-    else:
-        delta.elevator = default_delta_elevator#keep it level    
-
-
+        delta.elevator -= 0.005        
     if keyboard.is_pressed('a'):
-        delta.aileron = -0.2
+        delta.aileron -= 0.005
     elif keyboard.is_pressed('d'):
-        delta.aileron = 0.2
-    else:
-        delta.aileron = default_delta_aileron
-
-    if keyboard.is_pressed('q'):
-            delta.rudder = -0.2
-    elif keyboard.is_pressed('e'):
-            delta.rudder = 0.2
-    else:
-        delta.rudder = default_delta_rudder
+        delta.aileron += 0.005
+    if keyboard.is_pressed('e'):
+        delta.rudder -= 0.005
+    elif keyboard.is_pressed('q'):
+        delta.rudder += 0.005
 
     if keyboard.is_pressed('r'):
-            delta.throttle += 0.01
+             delta.throttle += 0.01
     elif keyboard.is_pressed('f'):
-            delta.throttle -= 0.01
-    if keyboard.is_pressed('esc'):
-        break
-
-    #pygame
-
-
-    my_string = "Elevator: " + str(delta.elevator) + " Aileron: " + str(delta.aileron) + " Rudder: " + str(delta.rudder) + " Throttle: " + str(delta.throttle)
-    text = font.render(my_string, True, blue)
-    textRect = text.get_rect()
-    textRect.center = (X // 2, Y // 2)
-
-    display_surface.fill(white)
-    display_surface.blit(text, textRect)
-    for event in pygame.event.get():
- 
-        # if event object type is QUIT
-        # then quitting the pygame
-        # and program both.
-        if event.type == pygame.QUIT:
- 
-            # deactivates the pygame library
-            pygame.quit()
- 
-            # quit the program.
-            quit()
- 
-        # Draws the surface object to the screen.
-    pygame.display.update()
+             delta.throttle -= 0.01
+    # if keyboard.is_pressed('esc'):
+    #     break
 
 
 

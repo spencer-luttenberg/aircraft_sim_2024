@@ -25,13 +25,25 @@ class MavDynamics(MavDynamicsForces):
         self._wind = np.array([[0.], [0.], [0.]])  # wind in NED frame in meters/sec
         # store forces to avoid recalculation in the sensors function
         self._forces = np.array([[0.], [0.], [0.]])
-        self._Va = MAV.u0
-        self._alpha = 0
-        self._beta = 0
-        # update velocity data and forces and moments
+        self.initialize_velocity(MAV.u0, 0., 0.)
+
+
+
+
+
+
+
+
+
+    def initialize_velocity(self, Va, alpha, beta):
+        self._Va = Va
+        self._alpha = alpha
+        self.beta = beta
+        self._state[3] = Va*np.cos(alpha)*np.cos(beta)
+        self._state[4] = Va*np.sin(beta)
+        self._state[5] = Va*np.sin(alpha)*np.cos(beta)
         self._update_velocity_data()
         self._forces_moments(delta=MsgDelta())
-        # update the message class for the true state
         self._update_true_state()
 
 
@@ -84,6 +96,14 @@ class MavDynamics(MavDynamicsForces):
         # compute angle of attack (self._alpha = ?)
         
         # compute sideslip angle (self._beta = ?)
+    def calculate_trim_output(self, x):
+        alpha, elevator, throttle = x
+        self.initialize_velocity(self._Va, alpha, self._beta)
+        delta = MsgDelta()
+        delta.elevator = elevator
+        delta.throttle = throttle
+        forces = self._forces_moments(delta=delta)
+        return(forces[0]**2 + forces[2]**2 + forces[4]**2)
 
     def _forces_moments(self, delta):
         """
@@ -113,9 +133,6 @@ class MavDynamics(MavDynamicsForces):
 
         F_lift = q_bar * MAV.S_wing * (CL + MAV.C_L_q*(MAV.c/(2*self._Va))*self.true_state.q +MAV.C_L_delta_e * delta.elevator)
         F_drag = q_bar * MAV.S_wing * (CD + (MAV.C_D_q * (MAV.c/(2*self._Va)) * self.true_state.q) + MAV.C_D_delta_e * delta.elevator)
-
-
-
 
         # compute gravitational forces ([fg_x, fg_y, fg_z])
 
