@@ -76,8 +76,8 @@ end_time = 60
 print("Press 'Esc' to exit...")
 
 
-Va0 = 35.
-alpha0 = 20.
+Va0 = 20.
+alpha0 = 0.
 beta0 = 0.
 
 delta.elevator = -0.1248
