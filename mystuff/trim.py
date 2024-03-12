@@ -10,7 +10,7 @@ def compute_trim(mav: MavDynamics, delta: MsgDelta):
     res = minimize(mav.calculate_trim_output, x0, bounds=bounds, method='SLSQP')
     return(res.x[0], res.x[1], res.x[2])
 
-    pass
+    
 
    
 def compute_parameters(mav: MavDynamics, delta, delta_a):

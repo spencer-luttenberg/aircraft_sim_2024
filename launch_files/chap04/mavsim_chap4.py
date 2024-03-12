@@ -99,7 +99,10 @@ delta.throttle = throttle
 
 
 while sim_time < end_time:
-
+    if abs((sim_time-3.)) < .01:
+         delta.elevator+=.3
+    else:
+         delta.elevator = elevator
 
 
     # ------- set control surfaces -------------
