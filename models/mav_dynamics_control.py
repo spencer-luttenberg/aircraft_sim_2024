@@ -152,6 +152,8 @@ class MavDynamics(MavDynamicsForces):
         # compute Lift and Drag Forces (F_lift, F_drag)
 
         # propeller thrust and torque
+        
+
         thrust_prop, torque_prop = self._motor_thrust_torque(self._Va, delta.throttle)
 
         c_x = -CD*np.cos(self._alpha) + CL*np.sin(self._alpha)
