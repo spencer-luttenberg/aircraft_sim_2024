@@ -100,7 +100,7 @@ delta.throttle = throttle
 
 while sim_time < end_time:
     if abs((sim_time-3.)) < .01:
-         delta.elevator+=.3
+         delta.elevator+=.6
     else:
          delta.elevator = elevator
 

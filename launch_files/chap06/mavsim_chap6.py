@@ -10,7 +10,7 @@ mavsim_python
 import os, sys
 # insert parent directory at beginning of python search path
 from pathlib import Path
-sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
+sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
 # use QuitListener for Linux or PC <- doesn't work on Mac
 #from tools.quit_listener import QuitListener
 import numpy as np
@@ -19,11 +19,17 @@ import parameters.simulation_parameters as SIM
 from tools.signals import Signals
 from models.mav_dynamics_control import MavDynamics
 from models.wind_simulation import WindSimulation
-from control.autopilot import Autopilot
-# from control.autopilot_lqr import Autopilot
-# from control.autopilot_tecs import Autopilot
+from controllers.autopilot import Autopilot
+# from controllers.autopilot_lqr import Autopilot
+# from controllers.autopilot_tecs import Autopilot
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
+
+
+from message_types.msg_delta import MsgDelta
+
+from mystuff.trim import do_trim
+
 
 #quitter = QuitListener()
 
@@ -52,7 +58,18 @@ if PLOTS:
 # initialize elements of the architecture
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
-autopilot = Autopilot(SIM.ts_simulation)
+delta = MsgDelta()
+
+delta = do_trim(mav, Va=23, alpha=np.deg2rad(3))
+#delta = do_trim(mav, Va=20, alpha=0)
+autopilot = Autopilot(delta, mav, SIM.ts_simulation)
+
+
+
+
+
+
+
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
@@ -74,6 +91,12 @@ course_command = Signals(dc_offset=np.radians(180),
 sim_time = SIM.start_time
 end_time = 100
 
+
+input_signal = Signals(amplitude=0.8,
+                       duration=1,
+                       start_time=2.0)
+
+
 # main simulation loop
 print("Press 'Esc' to exit...")
 while sim_time < end_time:
@@ -86,6 +109,10 @@ while sim_time < end_time:
     # -------autopilot-------------
     estimated_state = mav.true_state  # uses true states in the control
     delta, commanded_state = autopilot.update(commands, estimated_state)
+
+    delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
+    delta.elevator = delta.elevator + input_signal.impulse(time=sim_time)
+    delta.throttle = delta.throttle + input_signal.impulse(time=sim_time)
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector

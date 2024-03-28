@@ -77,7 +77,7 @@ gamma = 0.*np.pi/180.
 
 
 delta = MsgDelta()
-Va0 = 25.
+Va0 = 35.
 alpha0 = 0.
 beta0 = 0.
 

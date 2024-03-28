@@ -253,6 +253,8 @@ def f_euler(mav, x_euler, delta):
     p = x_euler[9]
     q = x_euler[10]
     r = x_euler[11]
+
+    
     phi_dot = p + q * np.sin(phi)*np.tan(theta)+ r*np.cos(phi)*np.tan(theta)
     theta_dot = q * np.cos(phi) - r*np.sin(phi)
     psi_dot = q * np.sin(phi)*(1/np.cos(theta))+ r*np.cos(phi)*(1/np.cos(theta))

@@ -31,10 +31,6 @@ class MavDynamics(MavDynamicsForces):
 
 
 
-
-
-
-
     def initialize_velocity(self, Va, alpha, beta):
         self._Va = Va
         self._alpha = alpha
