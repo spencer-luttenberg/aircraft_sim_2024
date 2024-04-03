@@ -16,16 +16,57 @@ from message_types.msg_state import MsgState
 from message_types.msg_delta import MsgDelta
 from controllers.pd_control import PDControl
 
-AP.airspeed_throttle_kp = 1.0/50.0 #50 m/s being max value
-AP.airspeed_throttle_ki = 0.0001
-
 yaw_damper_kp = 10.0
 yaw_damper_kd = 1.0
 
 
-alpha_elevator_kp = -(1/np.deg2rad(13)) #set 13 degrees max
-alpha_elevator_ki = 0.00001
-alpha_elevator_kd = 0.1*alpha_elevator_kp
+
+#ALPHA STUFF
+ALPHA_MAX = np.deg2rad(12)
+ALPHA_MIN = np.deg2rad(-2)
+
+MAX_GAMMA_OUTPUT = np.deg2rad(45) #X degrees of gamma at any current time
+MAX_ALTITUDE = 750 #in meters FOR kp CALCULATIONS
+
+
+altitude_kp = 0.01
+altitude_ki = 0.001
+altitude_kd = 0.001
+
+
+gamma_kp= 1
+gamma_ki= 0.5
+gamma_kd= 0.02
+
+
+# gamma_kp = (np.deg2rad(12))/(np.deg2rad(15))
+# gamma_kd=0.5*gamma_kp
+# gamma_ki=0.001
+
+
+
+
+alpha_elevator_kp = -(1/np.deg2rad(12)) #set 12 degrees max
+alpha_elevator_ki = -0.00001
+alpha_elevator_kd = 0.005*alpha_elevator_kp
+
+
+AP.airspeed_throttle_kp = 0.2
+AP.airspeed_throttle_ki = 0.05
+
+
+MAX_ROLL = np.deg2rad(45)
+MIN_ROLL = np.deg2rad(-45)
+MAX_CHI = np.deg2rad(180)
+chi_kp = MAX_ROLL/MAX_CHI #positive derived with math
+chi_ki = 0.0000001 #positive
+chi_kd = 0.1*chi_kp
+
+MAX_DELTA_A = 1
+roll_kp = 2*MAX_DELTA_A/MAX_ROLL #Kp determined to be positive
+roll_kd = 0.001*roll_kp #Kd determined to be positive
+roll_ki = 0.1
+
 
 class Autopilot:
     def __init__(self, delta, mav, ts_control):
@@ -35,47 +76,28 @@ class Autopilot:
                         kp=AP.airspeed_throttle_kp,
                         ki=AP.airspeed_throttle_ki,
                         Ts=ts_control,
-                        limit=1.0,
+                        max=1.0,
+                        min=0.0,
                         init_integrator=delta.throttle/AP.airspeed_throttle_ki)
         self.elevator_from_alpha = PIDControl(
             kp=alpha_elevator_kp,
             ki=alpha_elevator_ki,
             kd=alpha_elevator_kd,
-            limit=1.0,
+            max=1,
+            min=-1,
             Ts=ts_control,
-            init_integrator=delta.elevator/alpha_elevator_ki
+            init_integrator=0
         )
         self.yaw_damper = PDControl(kp=yaw_damper_kp, kd=yaw_damper_kd, Ts=ts_control, limit=1.0)
 
-        # # instantiate lateral-directional controllers
-        # self.roll_from_aileron = PDControlWithRate(
-        #                 kp=AP.roll_kp,
-        #                 kd=AP.roll_kd,
-        #                 limit=np.radians(45))
-        # self.course_from_roll = PIControl(
-        #                 kp=AP.course_kp,
-        #                 ki=AP.course_ki,
-        #                 Ts=ts_control,
-        #                 limit=np.radians(30))
-        # # self.yaw_damper = TransferFunction(
-        # #                 num=np.array([[AP.yaw_damper_kr, 0]]),
-        # #                 den=np.array([[1, AP.yaw_damper_p_wo]]),
-        # #                 Ts=ts_control)
-        # self.yaw_damper = TFControl(
-        #                 k=AP.yaw_damper_kr,
-        #                 n0=0.0,
-        #                 n1=1.0,
-        #                 d0=AP.yaw_damper_p_wo,
-        #                 d1=1,
-        #                 Ts=ts_control)
-
-        # # instantiate longitudinal controllers
-
-        # self.altitude_from_pitch = PIControl(
-        #                 kp=AP.altitude_kp,
-        #                 ki=AP.altitude_ki,
-        #                 Ts=ts_control,
-        #                 limit=np.radians(30))
+        self.altitude_controller = PIDControl(kp= altitude_kp, ki= altitude_ki, kd = altitude_kd, Ts=ts_control, max=np.deg2rad(15), min =np.deg2rad(-15), init_integrator=0.0)
+                
+        self.gamma_control = PIDControl(kp= gamma_kp, ki= gamma_ki, kd = gamma_kd, Ts=ts_control, max=ALPHA_MAX, min =ALPHA_MIN, init_integrator=0.0)
+                
+        self.chi_controller = PIDControl(kp= chi_kp, ki= chi_ki, kd = chi_kd, Ts=ts_control, max=MAX_ROLL, min =MIN_ROLL, init_integrator=0.0)
+                
+        self.roll_controller = PIDControl(kp= roll_kp, ki= roll_ki, kd = roll_kd, Ts=ts_control, max=1.0, min=-1.0, init_integrator=delta.aileron/roll_ki)
+        
         self.commanded_state = MsgState()
 
     def update(self, cmd, state):
@@ -94,17 +116,58 @@ class Autopilot:
                          throttle=0)
         
         
-        delta.throttle = self.throttle_from_airspeed.update(23, state.Va)
-        delta.elevator = self.elevator_from_alpha.update(np.deg2rad(3), state.alpha)
+        #delta.throttle = self.throttle_from_airspeed.update(23, state.Va)
+        # delta.elevator = self.elevator_from_alpha.update(np.deg2rad(3), state.alpha)
         #delta.elevator = self.elevator_from_alpha.update(state.alpha, state.alpha)
         delta.rudder = self.yaw_damper.update(0, state.beta)
 
+        
+        delta.throttle = self.throttle_from_airspeed.update(cmd.airspeed_command, state.Va)    
 
-        self.commanded_state.altitude = 0
-        self.commanded_state.Va = 0
-        self.commanded_state.phi = 0
-        self.commanded_state.theta = 0
-        self.commanded_state.chi = 0
+        #delta.throttle = self.throttle_from_airspeed.update(23, state.Va)
+        #delta.elevator = self.elevator_from_alpha.update(np.deg2rad(2), state.alpha)
+
+
+        cmd_gamma = self.altitude_controller.update(cmd.altitude_command, state.altitude)
+
+
+        #cmd_gamma = np.deg2rad(25)
+        # cmd_gamma = np.deg2rad(5)
+        #print("Gamma error: " + str(np.rad2deg(cmd_gamma-state.gamma)))
+
+
+
+        
+        cmd_alpha = self.gamma_control.update(cmd_gamma, state.gamma)  
+        
+             
+        #print("Command alpha: " + str(np.deg2rad(cmd_alpha)))
+        #print("Gamma: " + str(np.rad2deg(state.gamma)))
+    
+
+
+        #cmd_alpha = np.deg2rad(3)
+        delta.elevator = self.elevator_from_alpha.update(cmd_alpha, state.alpha)
+
+
+        #print("Error: " + str(np.rad2deg(cmd_alpha-state.alpha)))
+
+
+        output_roll = self.chi_controller.update(cmd.course_command, state.chi)
+
+
+        delta.aileron = self.roll_controller.update(output_roll, state.phi)
+        #delta.aileron=0.0
+
+        #print("Alpha Error:" + str(np.rad2deg(cmd_alpha-state.alpha)))
+
+        # self.commanded_state.altitude = 0
+        # self.commanded_state.Va = 0
+        # self.commanded_state.phi = 0
+        # self.commanded_state.theta = 0
+        # self.commanded_state.chi = 0
+
+
         return delta, self.commanded_state
 
     def saturate(self, input, low_limit, up_limit):

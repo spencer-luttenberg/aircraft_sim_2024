@@ -4,6 +4,8 @@ Username: Spencer.Luttenberg
 
 Repository Description: Airplane simulation in Python to support ECE 5353 Spring 2024. This software will model many aspects of a small airplane including dynamics, sensors, and controls. It will also provide a visualization and strip charts of relevant data.
 
+Release 0.0.8 - Sixth Project: Autopilot Design
+
 Release 0.0.7 - Fifth Project: PID Controllers
 
 Release 0.0.6 - Fourth Project: Getting Eigenvalues

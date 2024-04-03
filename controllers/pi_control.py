@@ -8,21 +8,21 @@ import numpy as np
 
 
 class PIControl:
-    def __init__(self, kp=0.0, ki=0.0, Ts=0.01, limit=1.0, init_integrator=0.0):
+    def __init__(self, kp=0.0, ki=0.0, Ts=0.01, max=1.0, min=0, init_integrator=0.0):
         self.kp = kp
         self.ki = ki
         self.Ts = Ts
-        self.limit = limit
         self.integrator = init_integrator
         self.error_delay_1 = 0.0
+        self.max = max
+        self.min = min
 
     def update(self, y_ref, y):
 
         # compute the error
         error = y_ref - y
         # update the integrator using trapazoidal rule
-        self.integrator = self.integrator \
-                          + (self.Ts/2) * (error + self.error_delay_1)
+        self.integrator = self.integrator + (self.Ts/2) * (error + self.error_delay_1)
         # PI control
         u = self.kp * error \
             + self.ki * self.integrator
@@ -39,10 +39,10 @@ class PIControl:
 
     def _saturate(self, u):
         # saturate u at +- self.limit
-        if u >= self.limit:
-            u_sat = self.limit
-        elif u <= -self.limit:
-            u_sat = -self.limit
+        if u >= self.max:
+            u_sat = self.max
+        elif u <= self.min:
+            u_sat = self.min
         else:
             u_sat = u
         return u_sat

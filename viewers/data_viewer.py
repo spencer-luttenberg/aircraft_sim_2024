@@ -149,7 +149,7 @@ class DataViewer:
         self._plotter.create_data_set(plot_id="u", data_label="u", data_color=control_color)
         self._plotter.create_data_set(plot_id="v", data_label="v", data_color=control_color)
         self._plotter.create_data_set(plot_id="w", data_label="w", data_color=control_color)
-        self._plotter.create_data_set(plot_id="blank", data_label="blank", data_color=control_color)
+
 
         self._plotter.show_window()
 

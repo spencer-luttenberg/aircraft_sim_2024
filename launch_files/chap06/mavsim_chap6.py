@@ -60,9 +60,7 @@ wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 delta = MsgDelta()
 
-delta = do_trim(mav, Va=23, alpha=np.deg2rad(3))
-#delta = do_trim(mav, Va=20, alpha=0)
-autopilot = Autopilot(delta, mav, SIM.ts_simulation)
+
 
 
 
@@ -89,7 +87,7 @@ course_command = Signals(dc_offset=np.radians(180),
 
 # initialize the simulation time
 sim_time = SIM.start_time
-end_time = 100
+end_time = 1000
 
 
 input_signal = Signals(amplitude=0.8,
@@ -99,20 +97,41 @@ input_signal = Signals(amplitude=0.8,
 
 # main simulation loop
 print("Press 'Esc' to exit...")
+
+
+delta = do_trim(mav, Va=25, alpha=0)
+#delta = do_trim(mav, Va=20, alpha=0)
+autopilot = Autopilot(delta, mav, SIM.ts_simulation)
+
+
+
+
+commands.course_command = np.deg2rad(180)
+commands.altitude_command = 0.3048*2000
+commands.airspeed_command = 30
+commands.phi_feedforward = 0
+
+
+
+
+
+
 while sim_time < end_time:
 
-    # -------autopilot commands-------------
-    commands.airspeed_command = Va_command.square(sim_time)
-    commands.course_command = course_command.square(sim_time)
-    commands.altitude_command = altitude_command.square(sim_time)
+    # # -------autopilot commands-------------
+    # commands.airspeed_command = Va_command.square(sim_time)
+    # commands.course_command = course_command.square(sim_time)
+    # commands.altitude_command = altitude_command.square(sim_time)
 
     # -------autopilot-------------
     estimated_state = mav.true_state  # uses true states in the control
     delta, commanded_state = autopilot.update(commands, estimated_state)
+    
 
-    delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
-    delta.elevator = delta.elevator + input_signal.impulse(time=sim_time)
-    delta.throttle = delta.throttle + input_signal.impulse(time=sim_time)
+
+    # delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
+    # delta.elevator = delta.elevator + input_signal.impulse(time=sim_time)
+    # delta.throttle = delta.throttle + input_signal.impulse(time=sim_time)
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
