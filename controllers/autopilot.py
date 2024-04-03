@@ -15,7 +15,7 @@ from controllers.tf_control import TFControl
 from message_types.msg_state import MsgState
 from message_types.msg_delta import MsgDelta
 from controllers.pd_control import PDControl
-
+from models.mav_dynamics_control import MavDynamics
 yaw_damper_kp = 10.0
 yaw_damper_kd = 1.0
 
@@ -29,14 +29,14 @@ MAX_GAMMA_OUTPUT = np.deg2rad(45) #X degrees of gamma at any current time
 MAX_ALTITUDE = 750 #in meters FOR kp CALCULATIONS
 
 
-altitude_kp = 0.01
-altitude_ki = 0.001
-altitude_kd = 0.001
+altitude_kp = 0.05
+altitude_ki = 0.01
+altitude_kd = 0.0001
 
 
-gamma_kp= 1
-gamma_ki= 0.5
-gamma_kd= 0.02
+gamma_kp= 1.2
+gamma_ki= 1
+gamma_kd= 0
 
 
 # gamma_kp = (np.deg2rad(12))/(np.deg2rad(15))
@@ -46,12 +46,12 @@ gamma_kd= 0.02
 
 
 
-alpha_elevator_kp = -(1/np.deg2rad(12)) #set 12 degrees max
-alpha_elevator_ki = -0.00001
-alpha_elevator_kd = 0.005*alpha_elevator_kp
+alpha_elevator_kp = -20 
+alpha_elevator_ki = -20
+alpha_elevator_kd = -2
 
 
-AP.airspeed_throttle_kp = 0.2
+AP.airspeed_throttle_kp = 0.05
 AP.airspeed_throttle_ki = 0.05
 
 
@@ -69,7 +69,7 @@ roll_ki = 0.1
 
 
 class Autopilot:
-    def __init__(self, delta, mav, ts_control):
+    def __init__(self, delta, mav: MavDynamics, ts_control):
 
 
         self.throttle_from_airspeed = PIControl(
@@ -86,13 +86,13 @@ class Autopilot:
             max=1,
             min=-1,
             Ts=ts_control,
-            init_integrator=0
+            init_integrator=delta.elevator/alpha_elevator_ki
         )
         self.yaw_damper = PDControl(kp=yaw_damper_kp, kd=yaw_damper_kd, Ts=ts_control, limit=1.0)
 
         self.altitude_controller = PIDControl(kp= altitude_kp, ki= altitude_ki, kd = altitude_kd, Ts=ts_control, max=np.deg2rad(15), min =np.deg2rad(-15), init_integrator=0.0)
                 
-        self.gamma_control = PIDControl(kp= gamma_kp, ki= gamma_ki, kd = gamma_kd, Ts=ts_control, max=ALPHA_MAX, min =ALPHA_MIN, init_integrator=0.0)
+        self.gamma_control = PIDControl(kp= gamma_kp, ki= gamma_ki, kd = gamma_kd, Ts=ts_control, max=ALPHA_MAX, min =ALPHA_MIN, init_integrator=mav.true_state.alpha/gamma_ki)
                 
         self.chi_controller = PIDControl(kp= chi_kp, ki= chi_ki, kd = chi_kd, Ts=ts_control, max=MAX_ROLL, min =MIN_ROLL, init_integrator=0.0)
                 
@@ -161,11 +161,13 @@ class Autopilot:
 
         #print("Alpha Error:" + str(np.rad2deg(cmd_alpha-state.alpha)))
 
-        # self.commanded_state.altitude = 0
-        # self.commanded_state.Va = 0
+        self.commanded_state.altitude = cmd.altitude_command
+        self.commanded_state.Va = cmd.airspeed_command
         # self.commanded_state.phi = 0
         # self.commanded_state.theta = 0
         # self.commanded_state.chi = 0
+        self.commanded_state.alpha = cmd_alpha
+        self.commanded_state.gamma = cmd_gamma
 
 
         return delta, self.commanded_state

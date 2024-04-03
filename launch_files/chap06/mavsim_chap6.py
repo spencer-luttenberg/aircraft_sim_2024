@@ -73,13 +73,13 @@ delta = MsgDelta()
 from message_types.msg_autopilot import MsgAutopilot
 commands = MsgAutopilot()
 Va_command = Signals(dc_offset=25.0,
-                     amplitude=3.0,
-                     start_time=2.0,
-                     frequency=0.01)
+                     amplitude=5.0,
+                     start_time=4.0,
+                     frequency=0.05)
 altitude_command = Signals(dc_offset=100.0,
                            amplitude=20.0,
-                           start_time=0.0,
-                           frequency=0.02)
+                           start_time=4.0,
+                           frequency=0.05)
 course_command = Signals(dc_offset=np.radians(180),
                          amplitude=np.radians(45),
                          start_time=5.0,
@@ -106,9 +106,9 @@ autopilot = Autopilot(delta, mav, SIM.ts_simulation)
 
 
 
-commands.course_command = np.deg2rad(180)
-commands.altitude_command = 0.3048*2000
-commands.airspeed_command = 30
+commands.course_command = np.deg2rad(0)
+commands.altitude_command = 100
+commands.airspeed_command = 25
 commands.phi_feedforward = 0
 
 
@@ -119,9 +119,9 @@ commands.phi_feedforward = 0
 while sim_time < end_time:
 
     # # -------autopilot commands-------------
-    # commands.airspeed_command = Va_command.square(sim_time)
+    #commands.airspeed_command = Va_command.square(sim_time)
     # commands.course_command = course_command.square(sim_time)
-    # commands.altitude_command = altitude_command.square(sim_time)
+    commands.altitude_command = altitude_command.square(sim_time)
 
     # -------autopilot-------------
     estimated_state = mav.true_state  # uses true states in the control
