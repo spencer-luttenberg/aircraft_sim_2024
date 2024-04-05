@@ -80,14 +80,14 @@ altitude_command = Signals(dc_offset=100.0,
                            amplitude=20.0,
                            start_time=4.0,
                            frequency=0.05)
-course_command = Signals(dc_offset=np.radians(180),
+course_command = Signals(dc_offset=np.radians(0),
                          amplitude=np.radians(45),
                          start_time=5.0,
                          frequency=0.015)
 
 # initialize the simulation time
 sim_time = SIM.start_time
-end_time = 1000
+end_time = 10007
 
 
 input_signal = Signals(amplitude=0.8,
@@ -118,10 +118,10 @@ commands.phi_feedforward = 0
 
 while sim_time < end_time:
 
-    # # -------autopilot commands-------------
+    # # -------autopilot commands-------------d
     #commands.airspeed_command = Va_command.square(sim_time)
-    # commands.course_command = course_command.square(sim_time)
-    commands.altitude_command = altitude_command.square(sim_time)
+    commands.course_command = course_command.square(sim_time)
+    #commands.altitude_command = altitude_command.square(sim_time)
 
     # -------autopilot-------------
     estimated_state = mav.true_state  # uses true states in the control

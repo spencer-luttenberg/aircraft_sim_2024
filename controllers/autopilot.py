@@ -58,13 +58,15 @@ AP.airspeed_throttle_ki = 0.05
 MAX_ROLL = np.deg2rad(45)
 MIN_ROLL = np.deg2rad(-45)
 MAX_CHI = np.deg2rad(180)
-chi_kp = MAX_ROLL/MAX_CHI #positive derived with math
-chi_ki = 0.0000001 #positive
-chi_kd = 0.1*chi_kp
 
-MAX_DELTA_A = 1
-roll_kp = 2*MAX_DELTA_A/MAX_ROLL #Kp determined to be positive
-roll_kd = 0.001*roll_kp #Kd determined to be positive
+
+chi_kp = 0.5
+chi_ki = 0.01 #positive
+chi_kd = 0.05
+
+
+roll_kp = 0.22 #Kp determined to be positive
+roll_kd = 0.02#Kd determined to be positive
 roll_ki = 0.1
 
 
@@ -152,10 +154,14 @@ class Autopilot:
 
         #print("Error: " + str(np.rad2deg(cmd_alpha-state.alpha)))
 
-
+        if(cmd.course_command > np.pi):
+            cmd.course_command=np.pi-cmd.course_command
+        
+        
         output_roll = self.chi_controller.update(cmd.course_command, state.chi)
 
-
+        #output_roll = self.new_method()
+        #output_roll = cmd.course_command
         delta.aileron = self.roll_controller.update(output_roll, state.phi)
         #delta.aileron=0.0
 
@@ -163,14 +169,20 @@ class Autopilot:
 
         self.commanded_state.altitude = cmd.altitude_command
         self.commanded_state.Va = cmd.airspeed_command
-        # self.commanded_state.phi = 0
+
+
+        self.commanded_state.phi = output_roll
         # self.commanded_state.theta = 0
-        # self.commanded_state.chi = 0
+        self.commanded_state.chi = cmd.course_command
         self.commanded_state.alpha = cmd_alpha
         self.commanded_state.gamma = cmd_gamma
 
 
         return delta, self.commanded_state
+
+    def new_method(self):
+        output_roll = np.deg2rad(25)
+        return output_roll
 
     def saturate(self, input, low_limit, up_limit):
         if input <= low_limit:
