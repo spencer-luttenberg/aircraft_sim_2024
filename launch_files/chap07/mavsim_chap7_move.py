@@ -31,10 +31,15 @@ from message_types.msg_delta import MsgDelta
 from mystuff.trim import do_trim
 
 
+
+from viewers.sensor_viewer import SensorViewer
+
 #quitter = QuitListener()
 
+
 VIDEO = False
-PLOTS = True
+DATA_PLOTS = True
+SENSOR_PLOTS = True
 ANIMATION = True
 SAVE_PLOT_IMAGE = False
 
@@ -45,14 +50,18 @@ if VIDEO is True:
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
 
+
+
 #initialize the visualization
-if ANIMATION or PLOTS:
+if ANIMATION or DATA_PLOTS or SENSOR_PLOTS:
     app = pg.QtWidgets.QApplication([]) # use the same main process for Qt applications
 if ANIMATION:
     mav_view = MavViewer(app=app)  # initialize the mav viewer
-if PLOTS:
-    # initialize view of data plots
+if DATA_PLOTS:
     data_view = DataViewer(app=app,dt=SIM.ts_simulation, plot_period=SIM.ts_plot_refresh, 
+                           data_recording_period=SIM.ts_plot_record_data, time_window_length=30)
+if SENSOR_PLOTS:
+    sensor_view = SensorViewer(app=app,dt=SIM.ts_simulation, plot_period=SIM.ts_plot_refresh, 
                            data_recording_period=SIM.ts_plot_record_data, time_window_length=30)
 
 # initialize elements of the architecture
@@ -106,7 +115,7 @@ autopilot = Autopilot(delta, mav, SIM.ts_simulation)
 
 
 
-commands.course_command = np.deg2rad(0)
+commands.course_command = np.deg2rad(180)
 commands.altitude_command = 100
 commands.airspeed_command = 25
 commands.phi_feedforward = 0
@@ -122,6 +131,9 @@ while sim_time < end_time:
     #commands.airspeed_command = Va_command.square(sim_time)
     #commands.course_command = course_command.square(sim_time)
     #commands.altitude_command = altitude_command.square(sim_time)
+
+
+    measurements = mav.sensors()  # get sensor measurements
 
     # -------autopilot-------------
     estimated_state = mav.true_state  # uses true states in the control
@@ -140,13 +152,16 @@ while sim_time < end_time:
     # ------- animation -------
     if ANIMATION:
         mav_view.update(mav.true_state)  # plot body of MAV
-    if PLOTS:
+    if DATA_PLOTS:
         plot_time = sim_time
         data_view.update(mav.true_state,  # true states
                             None,  # estimated states
                             commanded_state,  # commanded states
                             delta)  # inputs to aircraft
-    if ANIMATION or PLOTS:
+    if SENSOR_PLOTS:
+        sensor_view.update(measurements)
+
+    if ANIMATION or DATA_PLOTS:
         app.processEvents()
     if VIDEO is True:
         video.update(sim_time)

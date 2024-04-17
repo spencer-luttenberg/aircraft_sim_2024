@@ -6,6 +6,36 @@ pid_control
 """
 import numpy as np
 
+import time
+
+
+import time
+class PID_Cool:
+    def __init__(self, kp, kd, ki, init_integrator, max_output, min_output):
+        self.kp = kp
+        self.kd = kd
+        self.ki = ki
+        self.current_integrator = init_integrator
+        self.previous_error = 0
+        self.previous_time = time.time()
+        self.max_output = max_output
+        self.min_output = min_output
+    def update(self, desired_value, input_value):
+        tmp_error = desired_value-input_value
+        proportional = (tmp_error)
+        derivative = ((tmp_error-self.previous_error)/(time.time()-self.previous_time))
+        integral_term = self.current_integrator + tmp_error*(time.time()-self.previous_time)
+        self.current_integrator = integral_term
+        self.previous_error = tmp_error
+        self.previous_time = time.time()
+        output = self.kp*proportional + self.kd*derivative + self.ki*(integral_term)
+        if(output> self.max_output):
+            output = self.max_output
+        if(output < self.min_output):
+            output = self.min_output
+        return output
+
+
 
 class PIDControl:
     def __init__(self, kp=0.0, ki=0.0, kd=0.0, Ts=0.01, sigma=0.05, max=1.0, min=-1.0, init_integrator=0.0):

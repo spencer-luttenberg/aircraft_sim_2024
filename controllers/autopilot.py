@@ -15,6 +15,7 @@ from controllers.tf_control import TFControl
 from message_types.msg_state import MsgState
 from message_types.msg_delta import MsgDelta
 from controllers.pd_control import PDControl
+from controllers.pid_control import PID_Cool
 from models.mav_dynamics_control import MavDynamics
 yaw_damper_kp = 10.0
 yaw_damper_kd = 1.0
@@ -61,8 +62,8 @@ MAX_CHI = np.deg2rad(180)
 
 
 chi_kp = 0.5
-chi_ki = 0.01 #positive
-chi_kd = 0.05
+chi_ki = 0.009 #positive
+chi_kd = 0.0001
 
 
 roll_kp = 0.22 #Kp determined to be positive
@@ -81,6 +82,15 @@ class Autopilot:
                         max=1.0,
                         min=0.0,
                         init_integrator=delta.throttle/AP.airspeed_throttle_ki)
+        
+        # self.elevator_from_alpha = PID_Cool(
+        #     kp=alpha_elevator_kp,
+        #     ki=alpha_elevator_ki,
+        #     kd=alpha_elevator_kd,
+        #     init_integrator=delta.elevator/alpha_elevator_ki,
+        #     max_output=1,
+        #     min_output=-1
+        # )
         self.elevator_from_alpha = PIDControl(
             kp=alpha_elevator_kp,
             ki=alpha_elevator_ki,
