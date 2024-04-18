@@ -136,28 +136,45 @@ class MavDynamics(MavDynamicsForces):
         self._sensors.accel_y = self.current_forces[1][0] / MAV.mass - MAV.gravity * np.cos(self.true_state.theta) * np.sin(self.true_state.phi) + np.random.normal(0, SENSOR.accel_sigma)
         self._sensors.accel_z = self.current_forces[2][0] / MAV.mass - MAV.gravity * np.cos(self.true_state.theta) * np.cos(self.true_state.phi) + np.random.normal(0, SENSOR.accel_sigma)
         
-        inc = np.deg2rad(66)
-        dec = np.deg2rad(2.13)
+        inc = np.deg2rad(64)
+        dec = np.deg2rad(2)
 
-        R_matrix = (euler_to_rotation(0, -inc, dec)).T
-        tmp_mat = np.matrix([[1], [0], [0]])
-        m_i = R_matrix*tmp_mat
-        mb = (euler_to_rotation(phi=self.true_state.phi, theta=self.true_state.theta, psi=self.true_state.psi)).T * m_i
+        m_strength = 50046.3 * (10**(-9)) #nT
 
-        mb[0] = mb[0] + np.random.normal(0, SENSOR.mag_sigma)
-        mb[1] = mb[1] + np.random.normal(0, SENSOR.mag_sigma)
-        mb[2] = mb[2] + np.random.normal(0, SENSOR.mag_sigma)
-        self._sensors.mag_x = mb[0]
-        self._sensors.mag_y = mb[1]
-        self._sensors.mag_z = mb[2]
+        M_h = np.sin(inc)* m_strength
+
+        M_n = np.cos(self.true_state.psi-dec)*M_h                # North
+
+        M_e = np.sin(self.true_state.psi- dec)*M_h                # East
+
+        M_d = np.cos(inc)*m_strength                # Down
+
+        M0_v1 = (np.matrix([M_n, M_e, M_d])).T
+
+        mv1 = (np.linalg.inv(euler_to_rotation(phi=self.true_state.phi, theta=self.true_state.theta, psi=0)))*M0_v1
+
+
+
+
+        # R_matrix = (euler_to_rotation(0, -inc, dec)).T
+        # tmp_mat = np.matrix([[1], [0], [0]])
+        # m_i = R_matrix*tmp_mat
+        # mb = (euler_to_rotation(phi=self.true_state.phi, theta=self.true_state.theta, psi=self.true_state.psi)).T * m_i
+
+        mv1[0] = mv1[0] #+ np.random.normal(0, SENSOR.mag_sigma)
+        mv1[1] = mv1[1] #+ np.random.normal(0, SENSOR.mag_sigma)
+        mv1[2] = mv1[2] #+ np.random.normal(0, SENSOR.mag_sigma)
+        self._sensors.mag_x = mv1[0]
+        self._sensors.mag_y = mv1[1]
+        self._sensors.mag_z = mv1[2]
 
         
-        # mv1 = (euler_to_rotation(phi=self.true_state.phi, theta=self.true_state.theta, psi=0))*mb
-        # psi_m = -np.arctan2(mv1[1], mv1[0])
-        # psi_out = psi_m + dec
+        mv1_o = (euler_to_rotation(phi=self.true_state.phi, theta=self.true_state.theta, psi=0))*mv1
+        psi_m = -np.arctan2(mv1_o[1], mv1_o[0])
+        psi_out = psi_m + dec
 
 
-        # print(np.rad2deg(psi_out)-np.rad2deg(self.true_state.psi))
+        print(np.rad2deg(psi_out)-np.rad2deg(self.true_state.psi))
 
         P0 = 101325
         L0 = -0.0065
