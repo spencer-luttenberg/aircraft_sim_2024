@@ -7,7 +7,7 @@ accel_sigma = 0.0025*9.81  # standard deviation of accelerometers in m/s^2
 gyro_x_bias = np.radians(5*np.random.uniform(-1, 1))  # bias on x_gyro
 gyro_y_bias = np.radians(5*np.random.uniform(-1, 1))  # bias on y_gyro
 gyro_z_bias = np.radians(5*np.random.uniform(-1, 1))  # bias on z_gyro
-gyro_sigma = np.radians(0.13)  # standard deviation of gyros in rad/sec
+gyro_sigma = np.radians(0.5)  # standard deviation of gyros in rad/sec
 
 #-------- Pressure Sensor(Altitude) --------
 abs_pres_sigma = 0.01*1000  # standard deviation of absolute pressure sensors in Pascals

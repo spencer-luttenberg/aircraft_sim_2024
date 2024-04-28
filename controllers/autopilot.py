@@ -29,11 +29,14 @@ ALPHA_MIN = np.deg2rad(-2)
 MAX_GAMMA_OUTPUT = np.deg2rad(45) #X degrees of gamma at any current time
 MAX_ALTITUDE = 750 #in meters FOR kp CALCULATIONS
 
-
+"""
 altitude_kp = 0.05
 altitude_ki = 0.01
 altitude_kd = 0.0001
-
+"""
+altitude_kp = 0.005
+altitude_ki = 0.001
+altitude_kd = 0.00001
 
 gamma_kp= 1.2
 gamma_ki= 1

@@ -174,7 +174,7 @@ class MavDynamics(MavDynamicsForces):
         psi_out = psi_m + dec
 
 
-        print(np.rad2deg(psi_out)-np.rad2deg(self.true_state.psi))
+        #print(np.rad2deg(psi_out)-np.rad2deg(self.true_state.psi))
 
         P0 = 101325
         L0 = -0.0065
@@ -182,8 +182,8 @@ class MavDynamics(MavDynamicsForces):
         M_M = 0.0289644 #kg/mol
         R = 8.31432
         
-        self._sensors.abs_pressure = P0* (1-((L0*self.true_state.altitude)/T0))**((MAV.gravity * M_M)/(R*L0)) + np.random.normal(0, SENSOR.abs_pres_sigma)
-        self._sensors.diff_pressure = ((MAV.rho * self.true_state.Va**2)/2) + np.random.normal(0, SENSOR.diff_pres_sigma)
+        self._sensors.abs_pressure = P0 * (T0/((L0 * self.true_state.altitude)+T0)) ** ((MAV.gravity * M_M) / (R * L0)) + np.random.normal(0, SENSOR.abs_pres_sigma)
+        self._sensors.diff_pressure = ((MAV.rho * self.true_state.Va ** 2) / 2) + np.random.normal(0, SENSOR.diff_pres_sigma)
         
         # simulate GPS sensor
         if self._t_gps >= SENSOR.ts_gps:

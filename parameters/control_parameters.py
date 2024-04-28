@@ -8,6 +8,8 @@ gravity = MAV.gravity  # gravity constant
 Va0 = 25 #TF.Va_trim
 rho = 0 # density of air
 sigma = 0  # low pass filter gain for derivative
+sigma_phi2 = 1  # placeholder for sigma_phi2 value
+sigma_theta2 = 1  # placeholder for sigma_theta2 value
 
 #----------roll loop-------------
 # get transfer function data for delta_a to phi
