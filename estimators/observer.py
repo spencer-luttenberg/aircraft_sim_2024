@@ -19,27 +19,29 @@ class Observer:
         # initialized estimated state message
         self.estimated_state = MsgState()
 
-        self.estimated_state.Vg = 20
+        #self.estimated_state.Vg = 20
         # use alpha filters to low pass filter gyros and accels
         # alpha = Ts/(Ts + tau) where tau is the LPF time constant
 
+        
 
 
         ##### TODO #####
-        self.lpf_gyro_x = AlphaFilter(alpha=0.7, y0=initial_measurements.gyro_x)
-        self.lpf_gyro_y = AlphaFilter(alpha=0.7, y0=initial_measurements.gyro_y)
+        self.lpf_gyro_x = AlphaFilter(alpha=0.99, y0=initial_measurements.gyro_x)
+        self.lpf_gyro_y = AlphaFilter(alpha=0.5, y0=initial_measurements.gyro_y)
         self.lpf_gyro_z = AlphaFilter(alpha=0.7, y0=initial_measurements.gyro_z)
         self.lpf_accel_x = AlphaFilter(alpha=0.7, y0=initial_measurements.accel_x)
         self.lpf_accel_y = AlphaFilter(alpha=0.7, y0=initial_measurements.accel_y)
         self.lpf_accel_z = AlphaFilter(alpha=0.7, y0=initial_measurements.accel_z)
         # use alpha filters to low pass filter absolute and differential pressure
-        self.lpf_abs = AlphaFilter(alpha=0.9, y0=initial_measurements.abs_pressure)
+   
+        self.lpf_abs = AlphaFilter(alpha=0.99, y0=initial_measurements.abs_pressure)
         self.lpf_diff = AlphaFilter(alpha=0.7, y0=initial_measurements.diff_pressure)
         # ekf for phi and theta
         self.attitude_ekf = EkfAttitude()
         # ekf for pn, pe, Vg, chi, wn, we, psi
         self.position_ekf = EkfPosition()
-
+        
 
         
         """
@@ -64,9 +66,6 @@ class Observer:
         abs_pressure = self.lpf_abs.update(measurement.abs_pressure)
         diff_pressure = self.lpf_diff.update(measurement.diff_pressure)
 
-
-
-
         # invert sensor model to get altitude and airspeed
         P0 = 101325
         L0 = -0.0065
@@ -85,7 +84,7 @@ class Observer:
         self.position_ekf.update(measurement, self.estimated_state)
 
 
-        self.estimated_state.altitude = true_state.altitude
+        #self.estimated_state.altitude = true_state.altitude
         # not estimating these
         self.estimated_state.gamma = true_state.gamma
         self.estimated_state.alpha = true_state.alpha
@@ -104,7 +103,6 @@ class AlphaFilter:
         self.y = y0  # initial condition
 
     def update(self, u):
-        
         self.y = self.alpha*self.y + (1-self.alpha)*u
         return self.y
 
@@ -169,8 +167,6 @@ class EkfAttitude:
         L = np.matmul(np.matmul(self.P, C.T), np.linalg.inv(S))
         error_stuff = y - h
 
-
-
         S_inv = np.linalg.inv(S)
         if (y-h).T @ S_inv @ (y-h) < self.gate_threshold:
         # update state estimate and covariance
@@ -180,6 +176,10 @@ class EkfAttitude:
 class EkfPosition:
     # implement continous-discrete EKF to estimate pn, pe, Vg, chi, wn, we, psi
 
+    #sensor noise -> increase R 
+    #proecess noise -> increase Q 
+    #more prediction high R low Q
+    #tune Q
     def __init__(self):
 
         self.Q = np.diag([
@@ -277,7 +277,7 @@ class EkfPosition:
             A = jacobian(self.f, self.xhat, measurement, state)
         
             # convert to discrete time models
-            Ad = np.eye(7) + self.Ts * A + (A**2)*self.Ts
+            Ad = np.eye(7) + self.Ts * A + (A**2)*(self.Ts**2)
             
             self.P = Ad*self.P*Ad.T + (self.Ts**2)*self.Q
 
@@ -342,7 +342,6 @@ def jacobian(fun, x, measurement, state):
     # compute jacobian of fun with respect to x
     f = fun(x, measurement, state)
     m = f.shape[0]
-    print("Jonathon Elliott")
     n = x.shape[0]
     eps = 0.0001  # deviation
     J = np.zeros((m, n))
